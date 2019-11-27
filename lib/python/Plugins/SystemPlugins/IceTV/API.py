@@ -34,7 +34,7 @@ from socket import socket, create_connection, AF_INET, SOCK_DGRAM, SHUT_RDWR, er
 from . import config, saveConfigFile, getIceTVDeviceType
 from boxbranding import getMachineBrand, getMachineName, getImageBuild
 
-_version_string = "20211007"
+_version_string = "20220622"
 _protocol = "http://"
 _device_type_id = getIceTVDeviceType()
 _debug_level = 0  # 1 = request/reply, 2 = 1+headers, 3 = 2+partial body, 4 = 2+full body
@@ -328,6 +328,28 @@ class Timer(AuthRequest):
 class Scans(AuthRequest):
     def __init__(self):
         super(Scans, self).__init__("/scans")
+
+    def post(self):
+        return self.send("post")
+
+
+class Settings(AuthRequest):
+    def __init__(self):
+        super(Settings, self).__init__("/user/settings")
+
+    def get(self):
+        return self.send("get")
+
+    def post(self):
+        return self.send("post")
+
+
+class PvrLogs(AuthRequest):
+    def __init__(self):
+        super(PvrLogs, self).__init__("/user/pvr_logs")
+
+    def get(self):
+        return self.send("get")
 
     def post(self):
         return self.send("post")
