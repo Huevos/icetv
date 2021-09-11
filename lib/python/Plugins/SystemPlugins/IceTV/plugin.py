@@ -33,7 +33,7 @@ from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.Pixmap import Pixmap
-from Components.config import getConfigListEntry
+from Components.config import getConfigListEntry, ConfigText
 from Components.Converter.genre import getGenreStringSub
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChoiceBox import ChoiceBox
@@ -1496,9 +1496,9 @@ class IceTVUserTypeScreen(Screen):
 
 class IceTVNewUserSetup(ConfigListScreen, Screen):
     skin = """
-<screen name="IceTVNewUserSetup" position="320,230" size="640,310" title="IceTV - User Information" >
+<screen name="IceTVNewUserSetup" position="320,230" size="640,335" title="IceTV - User Information" >
     <widget name="instructions" position="20,10" size="600,100" font="Regular;22" />
-    <widget name="config" position="20,120" size="600,100" />
+    <widget name="config" position="20,120" size="600,125" />
 
     <widget name="description" position="20,e-90" size="600,60" font="Regular;18" foregroundColor="grey" halign="left" valign="top" />
     <ePixmap name="red" position="20,e-28" size="15,16" pixmap="skin_default/buttons/button_red.png" alphatest="blend" />
@@ -1517,6 +1517,7 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
     _password = _("Password")
     _label = _("Label")
     _update_interval = _("Connect to IceTV server every")
+    _allow_logs = _("Allow IceTV logs to be sent to IceTV")
 
     def __init__(self, session):
         self.session = session
@@ -1538,6 +1539,8 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
                                 _("Choose a label that will identify this device within IceTV services.")),
              getConfigListEntry(self._update_interval, config.plugins.icetv.refresh_interval,
                                 _("Choose how often to connect to IceTV server to check for updates.")),
+             getConfigListEntry(self._allow_logs, config.plugins.icetv.send_logs,
+                                _("Allow IceTV logging to be sent to IceTV if the IceTV server requests it.")),
         ]
         ConfigListScreen.__init__(self, self.list, session)
         self["InusActions"] = ActionMap(contexts=["SetupActions", "ColorActions"],
@@ -1551,7 +1554,7 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
 
     def keyboard(self):
         selection = self["config"].getCurrent()
-        if selection[1] is not config.plugins.icetv.refresh_interval:
+        if isinstance(selection[1], ConfigText):
             self.KeyText()
 
     def cancel(self):
@@ -1560,6 +1563,11 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
         self.close(False)
 
     def saveConfs(self):
+        # If logging has just been enabled, mark existing logs as sent, so
+        # that only logs made after the change are sent.
+        if fetcher and config.plugins.icetv.send_logs.isChanged() and config.plugins.icetv.send_logs.value:
+            for l in fetcher.log:
+                l.sent = True
         config.plugins.icetv.server.name.save()
         config.plugins.icetv.member.country.save()
         config.plugins.icetv.member.region_id.save()
