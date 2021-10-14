@@ -1338,8 +1338,11 @@ class IceTVMain(ChoiceBox):
                 (_("Show log"), "CALLFUNC", self.showLog),
                 (_("Login to IceTV server"), "CALLFUNC", self.login),
                 (_("IceTV setup wizard"), "CALLFUNC", self.configure),
-                (_("Enable IceTV"), "CALLFUNC", self.enable),
-                (_("Disable IceTV"), "CALLFUNC", self.disable),
+                (
+                    (_("Disable IceTV"), "CALLFUNC", self.disable)
+                    if config.plugins.icetv.enable_epg.value
+                    else (_("Enable IceTV"), "CALLFUNC", self.enable)
+                ),
                ]
         if config.plugins.icetv.enable_epg.value:
             menu.append((_("Fetch EPG and update timers now"), "CALLFUNC", self.fetch))
