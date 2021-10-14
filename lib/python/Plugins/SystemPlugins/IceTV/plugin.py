@@ -1336,18 +1336,19 @@ class IceTVMain(ChoiceBox):
         self.setTitle(_("IceTV - Setup"))
         menu = [
                 (_("Show log"), "CALLFUNC", self.showLog),
-                (_("Fetch EPG and update timers now"), "CALLFUNC", self.fetch),
-                (_("IceTV setup wizard"), "CALLFUNC", self.configure),
                 (_("Login to IceTV server"), "CALLFUNC", self.login),
+                (_("IceTV setup wizard"), "CALLFUNC", self.configure),
                 (_("Enable IceTV"), "CALLFUNC", self.enable),
                 (_("Disable IceTV"), "CALLFUNC", self.disable),
                ]
+        if config.plugins.icetv.enable_epg.value:
+            menu.append((_("Fetch EPG and update timers now"), "CALLFUNC", self.fetch))
         try:
             # Use windowTitle for compatibility betwwen OpenATV & OpenViX
-            super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, skin_name=self.skinName, windowTitle=_("IceTV - Setup"))
+            super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, skin_name=self.skinName, windowTitle=_("IceTV - Setup"), selection=kwargs.get("selection", 0))
         except TypeError:
             # Fallback for Beyonwiz
-            super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu)
+            super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, selection=kwargs.get("selection", 0))
 
         self["debugactions"] = ActionMap(
             contexts=["DirectionActions"],
@@ -1368,14 +1369,22 @@ class IceTVMain(ChoiceBox):
 
     def enable(self, res=None):
         enableIceTV()
-        _session.open(MessageBox, _("IceTV enabled"), type=MessageBox.TYPE_INFO, timeout=5)
+        _session.openWithCallback(self.replaceMenu, MessageBox, _("IceTV enabled"), type=MessageBox.TYPE_INFO, timeout=5)
 
     def disable(self, res=None):
         disableIceTV()
-        _session.open(MessageBox, _("IceTV disabled"), type=MessageBox.TYPE_INFO, timeout=5)
+        _session.openWithCallback(self.replaceMenu, MessageBox, _("IceTV disabled"), type=MessageBox.TYPE_INFO, timeout=5)
 
     def configure(self, res=None):
         _session.open(IceTVServerSetup)
+
+    def replaceMenu(self, args):
+        # If the current IceTV main instance isn't hidden at this
+        # point, it can display briefly when instances above it on
+        # the stack are closed
+        self.hide()
+        _session.open(IceTVMain, selection=self["list"].getSelectedIndex())
+        self.close()
 
     def fetch(self, res=None):
         try:
