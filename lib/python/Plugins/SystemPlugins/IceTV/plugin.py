@@ -47,7 +47,6 @@ from calendar import timegm
 from time import strptime, gmtime, localtime, strftime, time
 from . import config, enableIceTV, disableIceTV
 import API as ice
-import requests
 from collections import deque, defaultdict
 from operator import itemgetter
 from Screens.TextBox import TextBox
@@ -370,16 +369,35 @@ parental_ratings = {
 }
 
 def _logResponseException(logger, heading, exception):
+    from requests.exceptions import ConnectionError, RequestException
     msg = heading
-    if isinstance(exception, requests.exceptions.ConnectionError):
-        msg += ": " + _("The IceTV server can not be reached. Try checking the Internet connection on your %s %s\nDetails") % (getMachineBrand(), getMachineName())
-    msg += ": " + str(exception)
-    if hasattr(exception, "response") and hasattr(exception.response, "text"):
-        ex_text = str(exception.response.text).strip()
-        if ex_text:
-            msg += "\n" + ex_text
-    logger.addLog(msg)
-    return msg
+    exception_text = str(exception)
+    details_text = ""
+    if isinstance(exception, RequestException):
+	if isinstance(exception, ConnectionError):
+	    msg += ": " + _("The IceTV server can not be reached. Try checking the Internet connection on your %s %s\nError") % (getMachineBrand(), getMachineName())
+	    if hasattr(exception.message, "reason") and isinstance(exception.message.reason, Exception):
+	        err_text = exception.message.reason.message
+		skip_start = exception.message.reason.message.find("<")
+		skip_pos = exception.message.reason.message.find(">: ")
+		if skip_start >= 0 and skip_pos >= 0 and skip_start <= skip_pos:
+			err_text = err_text[skip_pos + 3:]
+		if exception_text:
+		    details_text = _("\nSee IceTV log for more details")
+	    else:
+	        err_text = exception_text
+	else:
+	    try:
+		err_text = ', '.join(_("%s (%d)") % (e["error_msg"].encode("utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
+		if exception_text:
+		    details_text = _("\nSee IceTV log for more details")
+	    except Exception:
+		err_text = exception.response and exception.response.text.strip() or exception_text
+	msg += err_text and (": %s" % err_text) or _(": Unknown error")
+    else:
+	msg +=  ": %s" % exception_text
+    logger.addLog("%s%s" % (msg, details_text and ("\n%s" % exception_text) or ''))
+    return "%s%s" % (msg, details_text)
 
 def _getBatchsize(last_update):
     maxDays = {
