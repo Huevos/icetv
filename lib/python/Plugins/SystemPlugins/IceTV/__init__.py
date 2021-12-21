@@ -4,6 +4,8 @@
 '''
 Copyright 2014-2021 Peter Urbanec
 
+SPDX-License-Identifier: GPL-3.0-or-later
+
 For alternate licensing options contact enigma.licensing (at) urbanec.net
 
 This file is part of IceTV Plugin for enigma2.
