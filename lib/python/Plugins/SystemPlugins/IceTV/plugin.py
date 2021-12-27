@@ -2,9 +2,27 @@
 # -*- coding:utf-8 -*-
 
 '''
-Copyright (C) 2014 Peter Urbanec
-All Right Reserved
-License: Proprietary / Commercial - contact enigma.licensing (at) urbanec.net
+Copyright 2014-2021 Peter Urbanec
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+For alternate licensing options contact enigma.licensing (at) urbanec.net
+
+This file is part of IceTV Plugin for enigma2.
+
+IceTV Plugin is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+IceTV Plugin is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with IceTV Plugin.  If not, see <https://www.gnu.org/licenses/>.
+
 '''
 
 from enigma import eTimer, eEPGCache, eDVBDB, eServiceReference, iRecordableService, eServiceCenter
