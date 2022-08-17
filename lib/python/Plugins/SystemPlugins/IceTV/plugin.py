@@ -33,7 +33,7 @@ from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.Pixmap import Pixmap
-from Components.config import getConfigListEntry
+from Components.config import getConfigListEntry, ConfigText
 from Components.Converter.genre import getGenreStringSub
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChoiceBox import ChoiceBox
@@ -44,8 +44,7 @@ from ServiceReference import ServiceReference
 from Tools.Directories import resolveFilename, SCOPE_PLUGINS
 from Tools.LoadPixmap import LoadPixmap
 from calendar import timegm
-from time import strptime, gmtime, strftime, time
-from datetime import datetime
+from time import strptime, gmtime, localtime, strftime, time
 from . import config, enableIceTV, disableIceTV
 import API as ice
 import requests
@@ -408,6 +407,34 @@ def _getBatchsize(last_update):
         pass
     return batchsize
 
+class LogEntry(dict):
+    def __init__(self, timestamp, log_message, sent=False):
+        self.sent = sent
+        self.timestamp = int(timestamp)
+        self.log_message = log_message
+
+    def get_timestamp(self):
+        return self["timestamp"]
+
+    def set_timestamp(self, timestamp):
+        self["timestamp"] = timestamp
+
+    timestamp = property(get_timestamp, set_timestamp)
+
+    def get_log_message(self):
+        return self["log_message"]
+
+    def set_log_message(self, log_message):
+        self["log_message"] = log_message
+
+    log_message = property(get_log_message, set_log_message)
+
+    def fmt(self):
+        return "%s: %s" % (strftime("%Y-%m-%d %H:%M:%S", localtime(self.timestamp)), self.log_message)
+
+    def __str__(self):
+        return self.fmt()
+
 class EPGFetcher(object):
     START_EVENTS = {
         iRecordableService.evStart,
@@ -483,6 +510,8 @@ class EPGFetcher(object):
         # issues its evEnd event, the iRecordableService.getError()
         # returns NoError (for example, evRecordWriteError).
         self.failed = {}
+
+        self.settings = {}
 
         # Update status for timers that are already running at startup
         # Use id(None) for their key to differentiate them from deferred
@@ -628,9 +657,9 @@ class EPGFetcher(object):
         self.fetch_timer.start(int(refresh_interval.value) * 1000)
 
     def addLog(self, msg):
-        logMsg = "%s: %s" % (str(datetime.now()).split(".")[0], msg)
-        self.log.append(logMsg)
-        print "[IceTV]", logMsg
+        entry = LogEntry(time(), msg)
+        self.log.append(entry)
+        print "[IceTV]", str(entry)
 
     def createFetchJob(self, res=None, send_scans=False):
         if config.plugins.icetv.configured.value and config.plugins.icetv.enable_epg.value:
@@ -656,9 +685,21 @@ class EPGFetcher(object):
                 return False
         res = True
         try:
+            self.settings = dict((s["name"], s["value"].encode("utf-8") if s["type"] == 2 else s["value"]) for s in self.getSettings())
+            print "[EPGFetcher] server settings", self.settings
+        except (Exception) as ex:
+            self.settings = {}
+            _logResponseException(self, _("Can not retrieve IceTV settings"), ex)
+        send_logs = config.plugins.icetv.send_logs.value and self.settings.get("send_pvr_logs", False)
+        print "[EPGFetcher] send_logs", send_logs
+        if send_logs:
+            self.postPvrLogs()
+        try:
             self.channel_service_map = self.makeChanServMap(self.getChannels())
         except (Exception) as ex:
             _logResponseException(self, _("Can not retrieve channel map"), ex)
+            if send_logs:
+                self.postPvrLogs()
             return False
         if self.send_scans:
             self.postScans()
@@ -669,6 +710,8 @@ class EPGFetcher(object):
             self.statusCleanup()
             if res:  # Timers fetched in non-batched show fetch
                 self.addLog("End update")
+                if send_logs:
+                    self.postPvrLogs()
                 return res
             res = True  # Reset res ready for a separate timer download
         except (IOError, RuntimeError) as ex:
@@ -692,6 +735,8 @@ class EPGFetcher(object):
         self.addLog("End update")
         self.deferredPostStatus(None)
         self.statusCleanup()
+        if send_logs:
+            self.postPvrLogs()
         return res
 
     def getTriplets(self):
@@ -1067,6 +1112,11 @@ class EPGFetcher(object):
             _session.nav.RecordTimer.timeChanged(timer)
         return success
 
+    def getSettings(self):
+        req = ice.Settings()
+        res = req.get().json()
+        return res.get("settings", [])
+
     def getShows(self, chan_list=None, fetch_timers=True):
         req = ice.Shows()
         last_update = config.plugins.icetv.last_update_time.value
@@ -1196,16 +1246,27 @@ class EPGFetcher(object):
 
     def postScans(self):
         scan_list = self.getTriplets()
-        print "[EPGFetcher] postScans", scan_list is not None
         if scan_list is None:
             return
         try:
             req = ice.Scans()
             req.data["scans"] = scan_list
             res = req.post()
-            print "[EPGFetcher] postScans", res
         except (IOError, RuntimeError, KeyError) as ex:
             _logResponseException(self, _("Can not post scan information"), ex)
+
+    def postPvrLogs(self):
+        log_list = [l for l in self.log if not l.sent]
+        if not log_list:
+            return
+        try:
+            req = ice.PvrLogs()
+            req.data["logs"] = log_list
+            res = req.post()
+            for l in log_list:
+                l.sent = True
+        except (IOError, RuntimeError, KeyError) as ex:
+            _logResponseException(self, _("Can not post PVR log information"), ex)
 
 
 fetcher = None
@@ -1329,7 +1390,7 @@ class IceTVMain(ChoiceBox):
         _session.open(IceTVNeedPassword)
 
     def showLog(self, res=None):
-        _session.open(IceTVLogView, "\n".join(fetcher.log))
+        _session.open(IceTVLogView, "\n".join(str(l) for l in fetcher.log))
 
 
 class IceTVLogView(TextBox):
@@ -1435,9 +1496,9 @@ class IceTVUserTypeScreen(Screen):
 
 class IceTVNewUserSetup(ConfigListScreen, Screen):
     skin = """
-<screen name="IceTVNewUserSetup" position="320,230" size="640,310" title="IceTV - User Information" >
+<screen name="IceTVNewUserSetup" position="320,230" size="640,335" title="IceTV - User Information" >
     <widget name="instructions" position="20,10" size="600,100" font="Regular;22" />
-    <widget name="config" position="20,120" size="600,100" />
+    <widget name="config" position="20,120" size="600,125" />
 
     <widget name="description" position="20,e-90" size="600,60" font="Regular;18" foregroundColor="grey" halign="left" valign="top" />
     <ePixmap name="red" position="20,e-28" size="15,16" pixmap="skin_default/buttons/button_red.png" alphatest="blend" />
@@ -1456,6 +1517,7 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
     _password = _("Password")
     _label = _("Label")
     _update_interval = _("Connect to IceTV server every")
+    _allow_logs = _("Allow IceTV logs to be sent to IceTV")
 
     def __init__(self, session):
         self.session = session
@@ -1477,6 +1539,8 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
                                 _("Choose a label that will identify this device within IceTV services.")),
              getConfigListEntry(self._update_interval, config.plugins.icetv.refresh_interval,
                                 _("Choose how often to connect to IceTV server to check for updates.")),
+             getConfigListEntry(self._allow_logs, config.plugins.icetv.send_logs,
+                                _("Allow IceTV logging to be sent to IceTV if the IceTV server requests it.")),
         ]
         ConfigListScreen.__init__(self, self.list, session)
         self["InusActions"] = ActionMap(contexts=["SetupActions", "ColorActions"],
@@ -1490,7 +1554,7 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
 
     def keyboard(self):
         selection = self["config"].getCurrent()
-        if selection[1] is not config.plugins.icetv.refresh_interval:
+        if isinstance(selection[1], ConfigText):
             self.KeyText()
 
     def cancel(self):
@@ -1499,6 +1563,11 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
         self.close(False)
 
     def saveConfs(self):
+        # If logging has just been enabled, mark existing logs as sent, so
+        # that only logs made after the change are sent.
+        if fetcher and config.plugins.icetv.send_logs.isChanged() and config.plugins.icetv.send_logs.value:
+            for l in fetcher.log:
+                l.sent = True
         config.plugins.icetv.server.name.save()
         config.plugins.icetv.member.country.save()
         config.plugins.icetv.member.region_id.save()
