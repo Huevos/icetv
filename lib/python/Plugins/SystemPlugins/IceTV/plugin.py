@@ -1676,6 +1676,7 @@ class IceTVRegionSetup(Screen):
             rl = []
             for region in regions:
                 rl.append((str(region["name"]), int(region["id"]), str(region["country_code_3"])))
+            rl.sort()
             self["config"].setList(rl)
             self["description"].setText("")
             if rl:
