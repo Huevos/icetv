@@ -374,28 +374,28 @@ def _logResponseException(logger, heading, exception):
     exception_text = str(exception)
     details_text = ""
     if isinstance(exception, RequestException):
-	if isinstance(exception, ConnectionError):
-	    msg += ": " + _("The IceTV server can not be reached. Try checking the Internet connection on your %s %s\nError") % (getMachineBrand(), getMachineName())
-	    if hasattr(exception.message, "reason") and isinstance(exception.message.reason, Exception):
-	        err_text = exception.message.reason.message
-		skip_start = exception.message.reason.message.find("<")
-		skip_pos = exception.message.reason.message.find(">: ")
-		if skip_start >= 0 and skip_pos >= 0 and skip_start <= skip_pos:
-			err_text = err_text[skip_pos + 3:]
-		if exception_text:
-		    details_text = _("\nSee IceTV log for more details")
-	    else:
-	        err_text = exception_text
-	else:
-	    try:
-		err_text = ', '.join(_("%s (%d)") % (e["error_msg"].encode("utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
-		if exception_text:
-		    details_text = _("\nSee IceTV log for more details")
-	    except Exception:
-		err_text = exception.response and exception.response.text.strip() or exception_text
-	msg += err_text and (": %s" % err_text) or _(": Unknown error")
+        if isinstance(exception, ConnectionError):
+            msg += ": " + _("The IceTV server can not be reached. Try checking the Internet connection on your %s %s\nError") % (getMachineBrand(), getMachineName())
+            if hasattr(exception.message, "reason") and isinstance(exception.message.reason, Exception):
+                err_text = exception.message.reason.message
+                skip_start = exception.message.reason.message.find("<")
+                skip_pos = exception.message.reason.message.find(">: ")
+                if skip_start >= 0 and skip_pos >= 0 and skip_start <= skip_pos:
+                    err_text = err_text[skip_pos + 3:]
+                if exception_text:
+                    details_text = _("\nSee IceTV log for more details")
+            else:
+                err_text = exception_text
+        else:
+            try:
+                err_text = ', '.join(_("%s (%d)") % (e["error_msg"].encode("utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
+                if exception_text:
+                    details_text = _("\nSee IceTV log for more details")
+            except Exception:
+                err_text = exception.response and exception.response.text.strip() or exception_text
+        msg += err_text and (": %s" % err_text) or _(": Unknown error")
     else:
-	msg +=  ": %s" % exception_text
+        msg += ": %s" % exception_text
     logger.addLog("%s%s" % (msg, details_text and ("\n%s" % exception_text) or ''))
     return "%s%s" % (msg, details_text)
 
@@ -408,8 +408,8 @@ def _getBatchsize(last_update):
     # Default batch size if it can't be determined dynamically
     batchsize = config.plugins.icetv.max_batchsize.value
     try:
-        for l in file("/proc/meminfo"):
-            f = l.split()
+        for ln in file("/proc/meminfo"):
+            f = ln.split()
             # Reduce batch size on machines with < 512MiB total available memory
             if len(f) >= 2 and f[0] == "MemAvailable:":
                 memkB = int(f[1])
@@ -419,7 +419,7 @@ def _getBatchsize(last_update):
                 # batchsize > 1
                 batchsize = max(1, (memkB - 60000) / (days * 250))
                 if config.plugins.icetv.max_batchsize.value > 0:
-                        batchsize = min(batchsize, config.plugins.icetv.max_batchsize.value)
+                    batchsize = min(batchsize, config.plugins.icetv.max_batchsize.value)
                 break
     except IOError:
         pass
@@ -910,14 +910,14 @@ class EPGFetcher(object):
                     if not desc:
                         desc = attrNewlines(evt.getExtendedDescription())
                     if desc and timer.description != desc and attrNewlines(timer.description) != desc:
-                            # print "[EPGFetcher] updateDescriptions from EPG description", servicename, "'" + timer.name + "':", "'" + timer.description + "' -> '" + desc + "'"
-                            timer.description = desc
-                            timer_updated = True
+                        # print "[EPGFetcher] updateDescriptions from EPG description", servicename, "'" + timer.name + "':", "'" + timer.description + "' -> '" + desc + "'"
+                        timer.description = desc
+                        timer_updated = True
                     eit = evt.getEventId()
                     if eit and timer.eit != eit:
-                            # print "[EPGFetcher] updateDescriptions from EPG eit", servicename, "'" + timer.name + "':", timer.eit, "->", eit
-                            timer.eit = eit
-                            timer_updated = True
+                        # print "[EPGFetcher] updateDescriptions from EPG eit", servicename, "'" + timer.name + "':", timer.eit, "->", eit
+                        timer.eit = eit
+                        timer_updated = True
                     if timer_updated:
                         self.addLog("Update timer details from EPG '" + timer.name + "'")
                     updated |= timer_updated
@@ -1232,7 +1232,7 @@ class EPGFetcher(object):
                     if local_timer.ice_timer_id is not None:
                         NavigationInstance.instance.RecordTimer.saveTimer()
                         self.deferredPostStatus(local_timer)
-                except:
+                except Exception:
                     self.addLog("Couldn't get IceTV timer id for timer '%s'" % local_timer.name)
 
             except (IOError, RuntimeError, KeyError) as ex:
@@ -1274,15 +1274,15 @@ class EPGFetcher(object):
             _logResponseException(self, _("Can not post scan information"), ex)
 
     def postPvrLogs(self):
-        log_list = [l for l in self.log if not l.sent]
+        log_list = [lg for lg in self.log if not lg.sent]
         if not log_list:
             return
         try:
             req = ice.PvrLogs()
             req.data["logs"] = log_list
             res = req.post()
-            for l in log_list:
-                l.sent = True
+            for lg in log_list:
+                lg.sent = True
         except (IOError, RuntimeError, KeyError) as ex:
             _logResponseException(self, _("Can not post PVR log information"), ex)
 
@@ -1353,15 +1353,15 @@ class IceTVMain(ChoiceBox):
         self.skinName = "IceTVMain"
         self.setTitle(_("IceTV - Setup"))
         menu = [
-                (_("Show log"), "CALLFUNC", self.showLog),
-                (_("Login to IceTV server"), "CALLFUNC", self.login),
-                (_("IceTV setup wizard"), "CALLFUNC", self.configure),
-                (
-                    (_("Disable IceTV"), "CALLFUNC", self.disable)
-                    if config.plugins.icetv.enable_epg.value
-                    else (_("Enable IceTV"), "CALLFUNC", self.enable)
-                ),
-               ]
+            (_("Show log"), "CALLFUNC", self.showLog),
+            (_("Login to IceTV server"), "CALLFUNC", self.login),
+            (_("IceTV setup wizard"), "CALLFUNC", self.configure),
+            (
+                (_("Disable IceTV"), "CALLFUNC", self.disable)
+                if config.plugins.icetv.enable_epg.value
+                else (_("Enable IceTV"), "CALLFUNC", self.enable)
+            ),
+        ]
         if config.plugins.icetv.enable_epg.value:
             menu.append((_("Fetch EPG and update timers now"), "CALLFUNC", self.fetch))
         try:
@@ -1372,10 +1372,10 @@ class IceTVMain(ChoiceBox):
             super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, selection=kwargs.get("selection", 0))
 
         self["debugactions"] = ActionMap(
-            contexts=["DirectionActions"],
+            contexts=["IceTVDebugActions"],
             actions={
-                 "chplus": self.increaseDebug,
-                 "chminus": self.decreaseDebug,
+                "chplus": self.increaseDebug,
+                "chminus": self.decreaseDebug,
             }, prio=-1)
 
     def increaseDebug(self):
@@ -1420,7 +1420,7 @@ class IceTVMain(ChoiceBox):
         _session.open(IceTVNeedPassword)
 
     def showLog(self, res=None):
-        _session.open(IceTVLogView, "\n".join(str(l) for l in fetcher.log))
+        _session.open(IceTVLogView, "\n".join(str(lg) for lg in fetcher.log))
 
 
 class IceTVLogView(TextBox):
@@ -1504,10 +1504,10 @@ class IceTVUserTypeScreen(Screen):
         options.append((_("Existing or trial user"), "oldUser"))
         self["menu"] = MenuList(options)
         self["aMap"] = ActionMap(contexts=["OkCancelActions", "DirectionActions"],
-                                 actions={
-                                     "cancel": self.cancel,
-                                     "ok": self.ok,
-                                 }, prio=-1)
+                                 actions={"cancel": self.cancel,
+                                          "ok": self.ok,
+                                          }, prio=-1
+                                 )
 
     def cancel(self):
         self.close(False)
@@ -1561,26 +1561,26 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
         self["key_yellow"] = Label()
         self["key_blue"] = Label(_("Keyboard"))
         self.list = [
-             getConfigListEntry(self._email, config.plugins.icetv.member.email_address,
-                                _("Your email address is used to login to IceTV services.")),
-             getConfigListEntry(self._password, config.plugins.icetv.member.password,
-                                _("Your password must have at least 5 characters.")),
-             getConfigListEntry(self._label, config.plugins.icetv.device.label,
-                                _("Choose a label that will identify this device within IceTV services.")),
-             getConfigListEntry(self._update_interval, config.plugins.icetv.refresh_interval,
-                                _("Choose how often to connect to IceTV server to check for updates.")),
-             getConfigListEntry(self._allow_logs, config.plugins.icetv.send_logs,
-                                _("Allow IceTV logging to be sent to IceTV if the IceTV server requests it.")),
+            getConfigListEntry(self._email, config.plugins.icetv.member.email_address,
+                               _("Your email address is used to login to IceTV services.")),
+            getConfigListEntry(self._password, config.plugins.icetv.member.password,
+                               _("Your password must have at least 5 characters.")),
+            getConfigListEntry(self._label, config.plugins.icetv.device.label,
+                               _("Choose a label that will identify this device within IceTV services.")),
+            getConfigListEntry(self._update_interval, config.plugins.icetv.refresh_interval,
+                               _("Choose how often to connect to IceTV server to check for updates.")),
+            getConfigListEntry(self._allow_logs, config.plugins.icetv.send_logs,
+                               _("Allow IceTV logging to be sent to IceTV if the IceTV server requests it.")),
         ]
         ConfigListScreen.__init__(self, self.list, session)
         self["InusActions"] = ActionMap(contexts=["SetupActions", "ColorActions"],
-                                        actions={
-                                             "cancel": self.cancel,
-                                             "red": self.cancel,
-                                             "green": self.save,
-                                             "blue": self.keyboard,
-                                             "ok": self.keyboard,
-                                         }, prio=-2)
+                                        actions={"cancel": self.cancel,
+                                                 "red": self.cancel,
+                                                 "green": self.save,
+                                                 "blue": self.keyboard,
+                                                 "ok": self.keyboard,
+                                                 }, prio=-2
+                                        )
 
     def keyboard(self):
         selection = self["config"].getCurrent()
@@ -1596,8 +1596,8 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
         # If logging has just been enabled, mark existing logs as sent, so
         # that only logs made after the change are sent.
         if fetcher and config.plugins.icetv.send_logs.isChanged() and config.plugins.icetv.send_logs.value:
-            for l in fetcher.log:
-                l.sent = True
+            for lg in fetcher.log:
+                lg.sent = True
         config.plugins.icetv.server.name.save()
         config.plugins.icetv.member.country.save()
         config.plugins.icetv.member.region_id.save()
@@ -1773,7 +1773,7 @@ class IceTVLogin(Screen):
         try:
             if ice.haveCredentials():
                 ice.Logout().delete()
-        except:
+        except Exception:
             # Failure to logout is not a show-stopper
             pass
         try:
@@ -1869,20 +1869,20 @@ class IceTVNeedPassword(ConfigListScreen, Screen):
         self["key_yellow"] = Label()
         self["key_blue"] = Label(_("Keyboard"))
         self.list = [
-             getConfigListEntry(self._password, config.plugins.icetv.member.password,
-                                _("Your existing IceTV password.")),
-             getConfigListEntry(self._update_interval, config.plugins.icetv.refresh_interval,
-                                _("Choose how often to connect to IceTV server to check for updates.")),
+            getConfigListEntry(self._password, config.plugins.icetv.member.password,
+                               _("Your existing IceTV password.")),
+            getConfigListEntry(self._update_interval, config.plugins.icetv.refresh_interval,
+                               _("Choose how often to connect to IceTV server to check for updates.")),
         ]
         ConfigListScreen.__init__(self, self.list, session)
         self["InpActions"] = ActionMap(contexts=["SetupActions", "ColorActions"],
-                                       actions={
-                                             "cancel": self.cancel,
-                                             "red": self.cancel,
-                                             "green": self.doLogin,
-                                             "blue": self.keyboard,
-                                             "ok": self.keyboard,
-                                         }, prio=-2)
+                                       actions={"cancel": self.cancel,
+                                                "red": self.cancel,
+                                                "green": self.doLogin,
+                                                "blue": self.keyboard,
+                                                "ok": self.keyboard,
+                                                }, prio=-2
+                                       )
 
     def keyboard(self):
         selection = self["config"].getCurrent()
