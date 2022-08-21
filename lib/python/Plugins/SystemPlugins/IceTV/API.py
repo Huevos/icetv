@@ -64,7 +64,7 @@ def getMacAddress(ifname):
         iface = pack('256s', ifname[:15])
         info = ioctl(sock.fileno(), 0x8927, iface)
         result = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1].upper()
-    except:
+    except Exception:
         pass
     sock.close()
     return result
@@ -74,8 +74,8 @@ def haveCredentials():
 
 def getCredentials():
     return {
-            "email_address": config.plugins.icetv.member.email_address.value,
-            "token": config.plugins.icetv.member.token.value,
+        "email_address": config.plugins.icetv.member.email_address.value,
+        "token": config.plugins.icetv.member.token.value,
     }
 
 def clearCredentials():
@@ -87,7 +87,7 @@ def showIdToEventId(show_id):
     try:
         # Fit within 16 bits, but avoid 0 and 0xFFF8 - 0xFFFF
         return (int(show_id) % 0xFFF7) + 1
-    except:
+    except Exception:
         # Invalid input converts to zero
         return 0
 

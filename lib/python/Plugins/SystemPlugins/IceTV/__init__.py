@@ -43,6 +43,7 @@ def getIceTVDeviceType():
         ("Beyonwiz", "V2"): 38,
     }.get((getMachineBrand(), getMachineName()), 22)
 
+
 config.plugins.icetv = ConfigSubsection()
 
 config.plugins.icetv.server = ConfigSubsection()
