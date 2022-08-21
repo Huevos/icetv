@@ -1372,7 +1372,7 @@ class IceTVMain(ChoiceBox):
             super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, selection=kwargs.get("selection", 0))
 
         self["debugactions"] = ActionMap(
-            contexts=["DirectionActions"],
+            contexts=["IceTVDebugActions"],
             actions={
                  "chplus": self.increaseDebug,
                  "chminus": self.decreaseDebug,

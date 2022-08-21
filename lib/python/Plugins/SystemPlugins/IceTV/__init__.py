@@ -30,6 +30,9 @@ from boxbranding import getMachineBrand, getMachineName
 from Components.config import config, ConfigSubsection, ConfigNumber, ConfigText, \
     ConfigPassword, ConfigSelection, NoSave, configfile, ConfigYesNo, \
     ConfigSelectionNumber
+from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_PLUGINS
+from Tools.LoadPixmap import LoadPixmap
+import os.path
 
 def getIceTVDeviceType():
     return {
@@ -135,3 +138,10 @@ def restoreDefaults():
     config.epg.save()
     config.plugins.icetv.enable_epg.value = False
     config.plugins.icetv.last_update_time.value = 0
+
+def loadIceTVIcon(iconname):
+    for scope, path in ((SCOPE_CURRENT_SKIN, "icons"), (SCOPE_PLUGINS, "SystemPlugins/IceTV/icons")):
+        iconpixmap = LoadPixmap(resolveFilename(scope, os.path.join(path, iconname)))
+        if iconpixmap:
+            return iconpixmap
+    return None
