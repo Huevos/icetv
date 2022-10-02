@@ -25,8 +25,15 @@ along with IceTV Plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 '''
 
+from __future__ import print_function, division
+import six
+
 from enigma import eTimer, eEPGCache, eDVBDB, eServiceReference, iRecordableService, eServiceCenter
-from Tools.ServiceReference import service_types_tv_ref
+try:
+        from Tools.ServiceReference import service_types_tv_ref
+except ImportError:
+        from Screens.ChannelSelection import service_types_tv
+        service_types_tv_ref = eServiceReference(service_types_tv)
 from boxbranding import getMachineBrand, getMachineName
 from Components.ActionMap import ActionMap
 from Components.ConfigList import ConfigListScreen
@@ -46,7 +53,7 @@ from Tools.LoadPixmap import LoadPixmap
 from calendar import timegm
 from time import strptime, gmtime, localtime, strftime, time
 from . import config, enableIceTV, disableIceTV
-import API as ice
+from . import API as ice
 from collections import deque, defaultdict
 from operator import itemgetter
 from Screens.TextBox import TextBox
@@ -388,7 +395,7 @@ def _logResponseException(logger, heading, exception):
                 err_text = exception_text
         else:
             try:
-                err_text = ', '.join(_("%s (%d)") % (e["error_msg"].encode("utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
+                err_text = ', '.join(_("%s (%d)") % (six.ensure_text(e["error_msg"], "utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
                 if exception_text:
                     details_text = _("\nSee IceTV log for more details")
             except Exception:
@@ -404,11 +411,11 @@ def _getBatchsize(last_update):
         "AUS": 7,
         "DEU": 14,
     }.get(config.plugins.icetv.member.country.value, 14)
-    days = min(maxDays, (int(time()) - last_update + 86400 - 1) / 86400)
+    days = min(maxDays, (int(time()) - last_update + 86400 - 1) // 86400)
     # Default batch size if it can't be determined dynamically
     batchsize = config.plugins.icetv.max_batchsize.value
     try:
-        for ln in file("/proc/meminfo"):
+        for ln in open("/proc/meminfo"):
             f = ln.split()
             # Reduce batch size on machines with < 512MiB total available memory
             if len(f) >= 2 and f[0] == "MemAvailable:":
@@ -417,7 +424,7 @@ def _getBatchsize(last_update):
                 # clamp in the range 1 .. config.plugins.icetv.max_batchsize
                 # if max_batchsize is non-zero, otherwise just ensure
                 # batchsize > 1
-                batchsize = max(1, (memkB - 60000) / (days * 250))
+                batchsize = max(1, (memkB - 60000) // (days * 250))
                 if config.plugins.icetv.max_batchsize.value > 0:
                     batchsize = min(batchsize, config.plugins.icetv.max_batchsize.value)
                 break
@@ -561,21 +568,21 @@ class EPGFetcher(object):
             return False
 
     def onTimerAdded(self, entry):
-        # print "[IceTV] timer added: ", entry
+        # print("[IceTV] timer added: ", entry)
         if not self.shouldProcessTimer(entry):
             return
-        # print "[IceTV] Add timer job"
+        # print("[IceTV] Add timer job")
         reactor.callInThread(self.postTimer, entry)
 
     def onTimerRemoved(self, entry):
-        # print "[IceTV] timer removed: ", entry
+        # print("[IceTV] timer removed: ", entry)
         if not self.shouldProcessTimer(entry) or not entry.ice_timer_id:
             return
-        # print "[IceTV] Delete timer job"
+        # print("[IceTV] Delete timer job")
         reactor.callInThread(self.deleteTimer, entry.ice_timer_id)
 
     def onTimerChanged(self, entry):
-        # print "[IceTV] timer changed: ", entry
+        # print("[IceTV] timer changed: ", entry)
 
         # If entry.cancelled is True, the timer is being deleted
         # and will be processed by a subsequent onTimerRemoved() call
@@ -587,14 +594,14 @@ class EPGFetcher(object):
             return
         if entry.ice_timer_id is None:
             # New timer as far as IceTV is concerned
-            # print "[IceTV] Add timer job"
+            # print("[IceTV] Add timer job")
             reactor.callInThread(self.postTimer, entry)
         else:
-            # print "[IceTV] Modify timer jobs"
+            # print("[IceTV] Modify timer jobs")
             ice_timer_id = entry.ice_timer_id
             entry.ice_timer_id = None
             # Delete the timer on the IceTV side, then post the new one
-            # print "[IceTV] Modify timer jobs - delete timer job"
+            # print("[IceTV] Modify timer jobs - delete timer job")
             d = threads.deferToThread(lambda: self.deleteTimer(ice_timer_id))
             d.addCallback(lambda x: self.deferredPostTimer(entry))
 
@@ -648,7 +655,7 @@ class EPGFetcher(object):
 
     def statusCleanup(self):
         def doTimeouts(status, timeout):
-            for tid, worklist in status.items():
+            for tid, worklist in list(six.iteritems(status)):
                 if worklist and min(worklist, key=itemgetter(-1))[-1] < timeout:
                     status[tid] = [ent for ent in worklist if ent[-1] >= timeout]
                     if not status[tid]:
@@ -660,7 +667,7 @@ class EPGFetcher(object):
         doTimeouts(self.failed, old24h)
 
     def deferredPostTimer(self, entry):
-        # print "[IceTV] Modify timer jobs - add timer job"
+        # print("[IceTV] Modify timer jobs - add timer job")
         reactor.callInThread(self.postTimer, entry)
 
     def deferredPostStatus(self, entry):
@@ -677,7 +684,7 @@ class EPGFetcher(object):
     def addLog(self, msg):
         entry = LogEntry(time(), msg)
         self.log.append(entry)
-        print "[IceTV]", str(entry)
+        print("[IceTV]", str(entry))
 
     def createFetchJob(self, res=None, send_scans=False):
         if config.plugins.icetv.configured.value and config.plugins.icetv.enable_epg.value:
@@ -685,7 +692,7 @@ class EPGFetcher(object):
             if password_requested:
                 self.addLog("Can not proceed - you need to login first")
                 return
-            # print "[IceTV] Create fetch job"
+            # print("[IceTV] Create fetch job")
             self.send_scans = self.send_scans or send_scans
             reactor.callInThread(self.doWork)
 
@@ -703,13 +710,13 @@ class EPGFetcher(object):
                 return False
         res = True
         try:
-            self.settings = dict((s["name"], s["value"].encode("utf-8") if s["type"] == 2 else s["value"]) for s in self.getSettings())
-            print "[EPGFetcher] server settings", self.settings
+            self.settings = dict((s["name"], six.ensure_text(s["value"], "utf-8") if s["type"] == 2 else s["value"]) for s in self.getSettings())
+            print("[EPGFetcher] server settings", self.settings)
         except (Exception) as ex:
             self.settings = {}
             _logResponseException(self, _("Can not retrieve IceTV settings"), ex)
         send_logs = config.plugins.icetv.send_logs.value and self.settings.get("send_pvr_logs", False)
-        print "[EPGFetcher] send_logs", send_logs
+        print("[EPGFetcher] send_logs", send_logs)
         if send_logs:
             self.postPvrLogs()
         try:
@@ -765,10 +772,10 @@ class EPGFetcher(object):
         triplet_map = defaultdict(list)
         scan_list = []
 
-        for channel_id, triplets in self.channel_service_map.items():
+        for channel_id, triplets in six.iteritems(self.channel_service_map):
             for triplet in triplets:
                 triplet_map[triplet].append(channel_id)
-        for name, triplets in name_map.items():
+        for name, triplets in six.iteritems(name_map):
             for triplet in triplets:
                 if triplet in triplet_map:
                     for channel_id in triplet_map[triplet]:
@@ -785,7 +792,7 @@ class EPGFetcher(object):
         if servicelist is not None:
             serviceRef = servicelist.getNext()
             while serviceRef.valid():
-                name = ServiceReference(serviceRef).getServiceName().decode("utf-8").strip()
+                name = six.ensure_text(ServiceReference(serviceRef).getServiceName(), "utf-8").strip()
                 name_map[name].append(tuple(serviceRef.getUnsignedData(i) for i in (3, 2, 1)))
                 serviceRef = servicelist.getNext()
         return name_map
@@ -793,10 +800,10 @@ class EPGFetcher(object):
     def makeChanServMap(self, channels):
         tripletEntryNames = ("original_network_id", "transport_stream_id", "service_id")
         res = defaultdict(list)
-        name_map = dict((n.upper(), t) for n, t in self.getScanChanNameMap().iteritems())
+        name_map = dict((n.upper(), t) for n, t in six.iteritems(self.getScanChanNameMap()))
 
         for channel in channels:
-            channel_id = long(channel["id"])
+            channel_id = int(channel["id"])
             triplets = []
             if "dvb_triplets" in channel:
                 triplets = channel["dvb_triplets"]
@@ -829,14 +836,14 @@ class EPGFetcher(object):
     def serviceToIceChannelId(self, serviceref):
         svc = str(serviceref).split(":")
         triplet = (int(svc[5], 16), int(svc[4], 16), int(svc[3], 16))
-        for channel_id, dvbt in self.channel_service_map.iteritems():
+        for channel_id, dvbt in six.iteritems(self.channel_service_map):
             if triplet in dvbt:
                 return channel_id
 
     def makeChanShowMap(self, shows):
         res = defaultdict(list)
         for show in shows:
-            channel_id = long(show["channel_id"])
+            channel_id = int(show["channel_id"])
             res[channel_id].append(show)
         return res
 
@@ -848,9 +855,9 @@ class EPGFetcher(object):
             event_id = int(show.get("eit_id", -1))
             if not (self.ID16_MIN <= event_id <= self.ID16_MAX):
                 event_id = ice.showIdToEventId(show["id"])
-            title = show.get("title", "").encode("utf-8")
-            short = show.get("subtitle", "").encode("utf-8")
-            extended = show.get("desc", "").encode("utf-8")
+            title = six.ensure_str(show.get("title", ""), "utf-8")
+            short = six.ensure_str(show.get("subtitle", ""), "utf-8")
+            extended = six.ensure_str(show.get("desc", ""), "utf-8")
             if "deleted_record" in show and int(show["deleted_record"]) == 1:
                 start = 999
                 duration = 10
@@ -861,23 +868,23 @@ class EPGFetcher(object):
                 timeError = False
                 for which, t in ("start", start), ("stop", stop):
                     if not (self.TIME_MIN <= t <= self.TIME_MAX):
-                        self.addLog("[EPGFetcher] ERROR: invalid EPG %s time: %d event id: %s title: %s" % (which, t, show["id"].encode("utf-8"), title))
+                        self.addLog("[EPGFetcher] ERROR: invalid EPG %s time: %d event id: %s title: %s" % (which, t, six.ensure_str(show["id"], "utf-8"), title))
                         timeError = True
                 if not (0 < duration <= self.DURATION_MAX):
-                    self.addLog("[EPGFetcher] ERROR: invalid EPG duration: %d start time: %d event id: %s title: %s" % (duration, start, show["id"].encode("utf-8"), title))
+                    self.addLog("[EPGFetcher] ERROR: invalid EPG duration: %d start time: %d event id: %s title: %s" % (duration, start, six.ensure_str(show["id"], "utf-8"), title))
                     timeError = True
                 if timeError:
                     continue
             genres = []
             for g in show.get("category", []):
-                name = g['name'].encode("utf-8")
+                name = six.ensure_str(g['name'], "utf-8")
                 if name in category_cache:
                     eit_remap = category_cache[name]
                     genres.append(eit_remap)
                 else:
                     eit = int(g.get("eit", "0"), 0) or 0x01
                     if eit & ~0xFF:
-                        self.addLog("[EPGFetcher] ERROR: invalid eit genre id: %s genre name: %s show_id: %s title: %s" % (eit, name, show["id"].encode("utf-8"), title))
+                        self.addLog("[EPGFetcher] ERROR: invalid eit genre id: %s genre name: %s show_id: %s title: %s" % (eit, name, six.ensure_str(show["id"], "utf-8"), title))
                         continue
                     eit_remap = genre_remaps.get(country_code, {}).get(name, eit)
                     mapped_name = getGenreStringSub((eit_remap >> 4) & 0xf, eit_remap & 0xf, country=country_code)
@@ -887,7 +894,7 @@ class EPGFetcher(object):
                     elif name not in mapping_errors:
                         self.addLog('[EPGFetcher] ERROR: lookup of 0x%02x%s "%s" returned \"%s"' % (eit, (" (remapped to 0x%02x)" % eit_remap) if eit != eit_remap else "", name, mapped_name))
                         mapping_errors.add(name)
-            p_rating = ((country_code, parental_ratings.get(show.get("rating", "").encode("utf-8"), 0x00)),)
+            p_rating = ((country_code, parental_ratings.get(six.ensure_str(show.get("rating", ""), "utf-8"), 0x00)),)
             res.append((start, duration, title, short, extended, genres, event_id, p_rating))
         return res
 
@@ -910,12 +917,12 @@ class EPGFetcher(object):
                     if not desc:
                         desc = attrNewlines(evt.getExtendedDescription())
                     if desc and timer.description != desc and attrNewlines(timer.description) != desc:
-                        # print "[EPGFetcher] updateDescriptions from EPG description", servicename, "'" + timer.name + "':", "'" + timer.description + "' -> '" + desc + "'"
+                        # print("[EPGFetcher] updateDescriptions from EPG description", servicename, "'" + timer.name + "':", "'" + timer.description + "' -> '" + desc + "'")
                         timer.description = desc
                         timer_updated = True
                     eit = evt.getEventId()
                     if eit and timer.eit != eit:
-                        # print "[EPGFetcher] updateDescriptions from EPG eit", servicename, "'" + timer.name + "':", timer.eit, "->", eit
+                        # print("[EPGFetcher] updateDescriptions from EPG eit", servicename, "'" + timer.name + "':", timer.eit, "->", eit)
                         timer.eit = eit
                         timer_updated = True
                     if timer_updated:
@@ -926,9 +933,9 @@ class EPGFetcher(object):
     def processShowsBatched(self):
         # Maximum number of channels to fetch in a batch
         max_fetch = _getBatchsize(config.plugins.icetv.last_update_time.value)
-        print "[EPGFetcher] fetch batch size:", max_fetch
+        print("[EPGFetcher] fetch batch size:", max_fetch)
         res = False
-        channels = self.channel_service_map.keys()
+        channels = list(six.iterkeys(self.channel_service_map))
         epgcache = eEPGCache.getInstance()
         channel_show_map = {}
         last_update_time = 0
@@ -940,7 +947,7 @@ class EPGFetcher(object):
             batch_fetch = max_fetch and len(fetch_chans) != len(channels)
             shows = self.getShows(chan_list=batch_fetch and fetch_chans or None, fetch_timers=pos + len(fetch_chans) >= len(channels))
             channel_show_map = self.makeChanShowMap(shows["shows"])
-            for channel_id in channel_show_map.keys():
+            for channel_id in six.iterkeys(channel_show_map):
                 if channel_id in self.channel_service_map:
                     epgcache.importEvents(self.channel_service_map[channel_id], self.convertChanShows(channel_show_map[channel_id], mapping_errors))
             if pos == 0 and "last_update_time" in shows:
@@ -958,15 +965,15 @@ class EPGFetcher(object):
     def processTimers(self, timers):
         update_queue = []
         for iceTimer in timers:
-            # print "[IceTV] iceTimer:", iceTimer
+            # print("[IceTV] iceTimer:", iceTimer)
             try:
-                action = iceTimer.get("action", "").encode("utf-8")
-                state = iceTimer.get("state", "").encode("utf-8")
-                name = iceTimer.get("name", "").encode("utf-8")
+                action = six.ensure_str(iceTimer.get("action", ""), "utf-8")
+                state = six.ensure_str(iceTimer.get("state", ""), "utf-8")
+                name = six.ensure_str(iceTimer.get("name", ""), "utf-8")
                 start = int(timegm(strptime(iceTimer["start_time"].split("+")[0], "%Y-%m-%dT%H:%M:%S")))
                 duration = 60 * int(iceTimer["duration_minutes"])
-                channel_id = long(iceTimer["channel_id"])
-                ice_timer_id = iceTimer["id"].encode("utf-8")
+                channel_id = int(iceTimer["channel_id"])
+                ice_timer_id = six.ensure_str(iceTimer["id"], "utf-8")
                 timeError = False
                 for which, t, tTest in ("start", start, start - self.PADDING_ALLOWANCE), ("stop", start + duration, start + duration + self.PADDING_ALLOWANCE):
                     if not (self.TIME_MIN <= tTest <= self.TIME_MAX):
@@ -983,7 +990,7 @@ class EPGFetcher(object):
                 if action == "forget":
                     for timer in _session.nav.RecordTimer.timer_list:
                         if timer.ice_timer_id == ice_timer_id:
-                            # print "[IceTV] removing timer:", timer
+                            # print("[IceTV] removing timer:", timer)
                             _session.nav.RecordTimer.removeEntry(timer)
                             break
                     else:
@@ -994,7 +1001,7 @@ class EPGFetcher(object):
                     completed = False
                     for timer in _session.nav.RecordTimer.processed_timers:
                         if timer.ice_timer_id == ice_timer_id:
-                            # print "[IceTV] completed timer:", timer
+                            # print("[IceTV] completed timer:", timer)
                             iceTimer["state"] = "completed"
                             iceTimer["message"] = "Done"
                             update_queue.append(iceTimer)
@@ -1003,7 +1010,7 @@ class EPGFetcher(object):
                     if not completed:
                         for timer in _session.nav.RecordTimer.timer_list:
                             if timer.ice_timer_id == ice_timer_id:
-                                # print "[IceTV] updating timer:", timer
+                                # print("[IceTV] updating timer:", timer)
                                 eit = int(iceTimer.get("eit_id", -1))
                                 if not (self.ID16_MIN <= eit <= self.ID16_MAX):
                                     eit = None
@@ -1021,7 +1028,7 @@ class EPGFetcher(object):
                     created = False
                     if not completed and not updated:
                         channels = self.channel_service_map[channel_id]
-                        # print "[IceTV] channel_id %s maps to" % channel_id, channels
+                        # print("[IceTV] channel_id %s maps to" % channel_id, channels)
                         db = eDVBDB.getInstance()
                         # Sentinel values used if there are no channel matches
                         iceTimer["state"] = "failed"
@@ -1030,7 +1037,7 @@ class EPGFetcher(object):
                             serviceref = db.searchReference(channel[1], channel[0], channel[2])
                             if serviceref.valid():
                                 serviceref = ServiceReference(eServiceReference(serviceref))
-                                # print "[IceTV] New %s is valid" % str(serviceref), serviceref.getServiceName()
+                                # print("[IceTV] New %s is valid" % str(serviceref), serviceref.getServiceName())
                                 eit = int(iceTimer.get("eit_id", -1))
                                 if not (self.ID16_MIN <= eit <= self.ID16_MAX):
                                     eit = None
@@ -1045,7 +1052,7 @@ class EPGFetcher(object):
                                     names = [r.name for r in conflicts]
                                     iceTimer["state"] = "failed"
                                     iceTimer["message"] = "Timer conflict: '%s'" % "', '".join(names)
-                                    # print "[IceTV] Timer conflict:", conflicts
+                                    # print("[IceTV] Timer conflict:", conflicts)
                                     self.addLog("Timer '%s' conflicts with %s" % (name, "', '".join([n for n in names if n != name])))
                     if not completed and not updated and not created:
                         iceTimer["state"] = "failed"
@@ -1055,14 +1062,14 @@ class EPGFetcher(object):
                     iceTimer["message"] = "No valid service mapping for channel_id %d" % channel_id
                     update_queue.append(iceTimer)
             except (IOError, RuntimeError, KeyError) as ex:
-                print "[IceTV] Can not process iceTimer:", ex
+                print("[IceTV] Can not process iceTimer:", ex)
         # Send back updated timer states
         res = True
         try:
             self.putTimers(update_queue)
             self.addLog("Timers updated OK")
         except KeyError as ex:
-            print "[IceTV] ", str(ex)
+            print("[IceTV] ", str(ex))
             res = False
         except (IOError, RuntimeError) as ex:
             _logResponseException(self, _("Can not update timers"), ex)
@@ -1070,14 +1077,14 @@ class EPGFetcher(object):
         return res
 
     def isIceTimerInUpdateQueue(self, iceTimer, update_queue):
-        ice_timer_id = iceTimer["id"].encode("utf-8")
+        ice_timer_id = six.ensure_str(iceTimer["id"], "utf-8")
         for timer in update_queue:
-            if ice_timer_id == timer["id"].encode("utf-8"):
+            if ice_timer_id == six.ensure_str(timer["id"], "utf-8"):
                 return True
         return False
 
     def isIceTimerInLocalTimerList(self, iceTimer, ignoreCompleted=False):
-        ice_timer_id = iceTimer["id"].encode("utf-8")
+        ice_timer_id = six.ensure_str(iceTimer["id"], "utf-8")
         for timer in _session.nav.RecordTimer.timer_list:
             if timer.ice_timer_id == ice_timer_id:
                 return True
@@ -1094,7 +1101,7 @@ class EPGFetcher(object):
             serviceref = db.searchReference(channel[1], channel[0], channel[2])
             if serviceref.valid():
                 serviceref = ServiceReference(eServiceReference(serviceref))
-                # print "[IceTV] Updated %s is valid" % str(serviceref), serviceref.getServiceName()
+                # print("[IceTV] Updated %s is valid" % str(serviceref), serviceref.getServiceName())
                 if str(timer.service_ref) != str(serviceref):
                     changed = True
                     timer.service_ref = serviceref
@@ -1170,7 +1177,7 @@ class EPGFetcher(object):
 
     def putTimer(self, local_timer):
         try:
-            # print "[IceTV] updating ice_timer", local_timer.ice_timer_id
+            # print("[IceTV] updating ice_timer", local_timer.ice_timer_id)
             req = ice.Timer(local_timer.ice_timer_id)
             timer = {}
             if not local_timer.eit:
@@ -1179,7 +1186,7 @@ class EPGFetcher(object):
             timer["id"] = local_timer.ice_timer_id
             timer["eit_id"] = local_timer.eit
             timer["start_time"] = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(local_timer.begin + config.recording.margin_before.value * 60))
-            timer["duration_minutes"] = ((local_timer.end - config.recording.margin_after.value * 60) - (local_timer.begin + config.recording.margin_before.value * 60)) / 60
+            timer["duration_minutes"] = ((local_timer.end - config.recording.margin_after.value * 60) - (local_timer.begin + config.recording.margin_before.value * 60)) // 60
             if local_timer.isRunning():
                 timer["state"] = "running"
                 timer["message"] = "Recording on %s" % config.plugins.icetv.device.label.value
@@ -1207,7 +1214,7 @@ class EPGFetcher(object):
                 return
         if local_timer.ice_timer_id is None:
             try:
-                # print "[IceTV] uploading new timer"
+                # print("[IceTV] uploading new timer")
                 if not local_timer.eit:
                     self.addLog("Timer '%s' has no event id; not sent to IceTV" % local_timer.name)
                     return
@@ -1224,10 +1231,10 @@ class EPGFetcher(object):
                 req.data["device_id"] = config.plugins.icetv.device.id.value
                 req.data["channel_id"] = channel_id
                 req.data["start_time"] = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime(local_timer.begin + config.recording.margin_before.value * 60))
-                req.data["duration_minutes"] = ((local_timer.end - config.recording.margin_after.value * 60) - (local_timer.begin + config.recording.margin_before.value * 60)) / 60
+                req.data["duration_minutes"] = ((local_timer.end - config.recording.margin_after.value * 60) - (local_timer.begin + config.recording.margin_before.value * 60)) // 60
                 res = req.post()
                 try:
-                    local_timer.ice_timer_id = res.json()["timers"][0]["id"].encode("utf-8")
+                    local_timer.ice_timer_id = six.ensure_str(res.json()["timers"][0]["id"], "utf-8")
                     self.addLog("Timer '%s' created OK" % local_timer.name)
                     if local_timer.ice_timer_id is not None:
                         NavigationInstance.instance.RecordTimer.saveTimer()
@@ -1243,7 +1250,7 @@ class EPGFetcher(object):
 
     def deleteTimer(self, ice_timer_id):
         try:
-            # print "[IceTV] deleting timer:", ice_timer_id
+            # print("[IceTV] deleting timer:", ice_timer_id)
             req = ice.Timer(ice_timer_id)
             req.delete()
             self.addLog("Timer deleted OK")
@@ -1256,7 +1263,7 @@ class EPGFetcher(object):
             req = ice.Timer(timer.ice_timer_id)
             req.data["message"] = message
             req.data["state"] = state
-            # print "[EPGFetcher] postStatus", timer.name, message, state
+            # print("[EPGFetcher] postStatus", timer.name, message, state)
             res = req.put()
         except (IOError, RuntimeError, KeyError) as ex:
             _logResponseException(self, _("Can not update timer status"), ex)
@@ -1351,7 +1358,6 @@ class IceTVMain(ChoiceBox):
         if _session is None:
             _session = session
         self.skinName = "IceTVMain"
-        self.setTitle(_("IceTV - Setup"))
         menu = [
             (_("Show log"), "CALLFUNC", self.showLog),
             (_("Login to IceTV server"), "CALLFUNC", self.login),
@@ -1370,6 +1376,7 @@ class IceTVMain(ChoiceBox):
         except TypeError:
             # Fallback for Beyonwiz
             super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, selection=kwargs.get("selection", 0))
+        self.setTitle(_("IceTV - Setup"))
 
         self["debugactions"] = ActionMap(
             contexts=["IceTVDebugActions"],
@@ -1381,12 +1388,12 @@ class IceTVMain(ChoiceBox):
     def increaseDebug(self):
         if ice._debug_level < 4:
             ice._debug_level += 1
-        print "[IceTV] debug level =", ice._debug_level
+        print("[IceTV] debug level =", ice._debug_level)
 
     def decreaseDebug(self):
         if ice._debug_level > 0:
             ice._debug_level -= 1
-        print "[IceTV] debug level =", ice._debug_level
+        print("[IceTV] debug level =", ice._debug_level)
 
     def enable(self, res=None):
         enableIceTV()
@@ -1454,7 +1461,7 @@ class IceTVServerSetup(Screen):
         self["key_green"] = Label(_("Save"))
         self["key_yellow"] = Label()
         self["key_blue"] = Label()
-        self["config"] = MenuList(sorted(ice.iceTVServers.items()))
+        self["config"] = MenuList(sorted(six.iteritems(ice.iceTVServers)))
         self["IrsActions"] = ActionMap(contexts=["SetupActions", "ColorActions"],
                                        actions={"cancel": self.cancel,
                                                 "red": self.cancel,
@@ -1465,13 +1472,13 @@ class IceTVServerSetup(Screen):
 
     def cancel(self):
         config.plugins.icetv.server.name.cancel()
-        print "[IceTV] server reset to", config.plugins.icetv.server.name.value
+        print("[IceTV] server reset to", config.plugins.icetv.server.name.value)
         self.close(False)
 
     def save(self):
         item = self["config"].getCurrent()
         config.plugins.icetv.server.name.value = item[1]
-        print "[IceTV] server set to", config.plugins.icetv.server.name.value
+        print("[IceTV] server set to", config.plugins.icetv.server.name.value)
         self.session.openWithCallback(self.userDone, IceTVUserTypeScreen)
 
     def userDone(self, user_success):
@@ -1585,7 +1592,10 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
     def keyboard(self):
         selection = self["config"].getCurrent()
         if isinstance(selection[1], ConfigText):
-            self.KeyText()
+            if hasattr(self, "keyText"):
+                self.keyText()
+            else:
+                self.KeyText()
 
     def cancel(self):
         for x in self["config"].list:
@@ -1765,7 +1775,7 @@ class IceTVLogin(Screen):
         if path.isfile(qrcode_path):
             self["qrcode"].instance.setPixmap(LoadPixmap(qrcode_path))
         else:
-            print "[IceTV] missing QR code file", qrcode_path
+            print("[IceTV] missing QR code file", qrcode_path)
 
         self.login_timer.start(3, True)
 
@@ -1886,8 +1896,11 @@ class IceTVNeedPassword(ConfigListScreen, Screen):
 
     def keyboard(self):
         selection = self["config"].getCurrent()
-        if selection[1] is not config.plugins.icetv.refresh_interval:
-            self.KeyText()
+        if isinstance(selection[1], ConfigText):
+            if hasattr(self, "keyText"):
+                self.keyText()
+            else:
+                self.KeyText()
 
     def cancel(self):
         for x in self["config"].list:

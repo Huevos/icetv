@@ -25,6 +25,8 @@ along with IceTV Plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 '''
 
+from __future__ import print_function, division
+
 from enigma import eEPGCache
 from boxbranding import getMachineBrand, getMachineName
 from Components.config import config, ConfigSubsection, ConfigNumber, ConfigText, \
@@ -111,14 +113,20 @@ def enableIceTV():
     setIceTVDefaults()
     epgcache = eEPGCache.getInstance()
     epgcache.setEpgSources(0)
-    epgcache.clear()
+    try:
+        epgcache.clear()
+    except AttributeError:
+        epgcache.flushEPG()
     epgcache.save()
     saveConfigFile()
 
 def disableIceTV():
     epgcache = eEPGCache.getInstance()
     epgcache.setEpgSources(0)
-    epgcache.clear()
+    try:
+        epgcache.clear()
+    except AttributeError:
+        epgcache.flushEPG()
     epgcache.save()
     epgcache.setEpgSources(eEPGCache.NOWNEXT | eEPGCache.SCHEDULE | eEPGCache.SCHEDULE_OTHER)
     restoreDefaults()

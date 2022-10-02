@@ -25,6 +25,9 @@ along with IceTV Plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 '''
 
+from __future__ import print_function, division
+import six
+
 import requests
 import json
 
@@ -34,12 +37,12 @@ from socket import socket, create_connection, AF_INET, SOCK_DGRAM, SHUT_RDWR, er
 from . import config, saveConfigFile, getIceTVDeviceType
 from boxbranding import getMachineBrand, getMachineName, getImageBuild
 
-_version_string = "20220821"
+_version_string = "20220822"
 _protocol = "http://"
 _device_type_id = getIceTVDeviceType()
 _debug_level = 0  # 1 = request/reply, 2 = 1+headers, 3 = 2+partial body, 4 = 2+full body
 
-print "[IceTV] server set to", config.plugins.icetv.server.name.value
+print("[IceTV] server set to", config.plugins.icetv.server.name.value)
 
 iceTVServers = {
     _("Australia"): "api.icetv.com.au",
@@ -53,7 +56,7 @@ def isServerReachable():
         sock.close()
         return True
     except sockerror as ex:
-        print "[IceTV] Can not connect to IceTV server:", str(ex)
+        print("[IceTV] Can not connect to IceTV server:", str(ex))
     return False
 
 def getMacAddress(ifname):
@@ -61,9 +64,9 @@ def getMacAddress(ifname):
     sock = socket(AF_INET, SOCK_DGRAM)
     # noinspection PyBroadException
     try:
-        iface = pack('256s', ifname[:15])
+        iface = pack('256s', six.ensure_binary(ifname[:15], "utf-8"))
         info = ioctl(sock.fileno(), 0x8927, iface)
-        result = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1].upper()
+        result = ''.join(['%02x:' % six.byte2int([char]) for char in info[18:24]])[:-1].upper()
     except Exception:
         pass
     sock.close()
@@ -117,21 +120,21 @@ class Request(object):
         r = requests.request(method, self.url, params=self.params, headers=self.headers, data=data, verify=False, timeout=10.0)
         err = not r.ok
         if err or _debug_level > 0:
-            print "[IceTV]", r.request.method, r.request.url
+            print("[IceTV]", r.request.method, r.request.url)
         if err or _debug_level > 1:
-            print "[IceTV] headers", r.request.headers
+            print("[IceTV] headers", r.request.headers)
         if err or _debug_level == 3:
-            print "[IceTV]", self._shorten(r.request.body)
+            print("[IceTV]", self._shorten(r.request.body))
         elif err or _debug_level > 3:
-            print "[IceTV]", r.request.body
+            print("[IceTV]", r.request.body)
         if err or _debug_level > 0:
-            print "[IceTV]", r.status_code, r.reason
+            print("[IceTV]", r.status_code, r.reason)
         if err or _debug_level > 1:
-            print "[IceTV] headers", r.headers
+            print("[IceTV] headers", r.headers)
         if err or _debug_level == 3:
-            print "[IceTV]", self._shorten(r.text)
+            print("[IceTV]", self._shorten(r.text))
         elif err or _debug_level > 3:
-            print "[IceTV]", r.text
+            print("[IceTV]", r.text)
         self.response = r
         if r.status_code == 401:
             clearCredentials()
