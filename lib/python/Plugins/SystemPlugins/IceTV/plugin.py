@@ -1376,7 +1376,6 @@ class IceTVMain(ChoiceBox):
         except TypeError:
             # Fallback for Beyonwiz
             super(IceTVMain, self).__init__(session, title=_("IceTV version %s") % ice._version_string, list=menu, selection=kwargs.get("selection", 0))
-        self.setTitle(_("IceTV - Setup"))
 
         self["debugactions"] = ActionMap(
             contexts=["IceTVDebugActions"],
