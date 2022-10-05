@@ -1448,7 +1448,10 @@ class IceTVServerSetup(Screen):
     <widget name="key_blue" position="490,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
 </screen>"""
 
-    _instructions = _("Please select the IceTV service that you wish to use.")
+    _instructions = _(
+        "Please select the IceTV service that you wish to use.\n\n"
+	"IceTV is a subscription service that is only available in the listed countries."
+    )
 
     def __init__(self, session):
         self.session = session
