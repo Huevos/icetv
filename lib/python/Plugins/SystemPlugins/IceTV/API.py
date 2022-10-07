@@ -46,8 +46,8 @@ print("[IceTV] server set to", config.plugins.icetv.server.name.value)
 
 iceTVServers = {
     _("Australia"): "api.icetv.com.au",
-# IceTV is no longer available in Germany
-#    _("Germany"): "api.icetv.de",
+    # IceTV is no longer available in Germany
+    # _("Germany"): "api.icetv.de",
 }
 
 def isServerReachable():

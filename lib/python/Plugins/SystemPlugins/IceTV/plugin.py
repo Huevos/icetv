@@ -30,10 +30,10 @@ import six
 
 from enigma import eTimer, eEPGCache, eDVBDB, eServiceReference, iRecordableService, eServiceCenter
 try:
-        from Tools.ServiceReference import service_types_tv_ref
+    from Tools.ServiceReference import service_types_tv_ref
 except ImportError:
-        from Screens.ChannelSelection import service_types_tv
-        service_types_tv_ref = eServiceReference(service_types_tv)
+    from Screens.ChannelSelection import service_types_tv
+    service_types_tv_ref = eServiceReference(service_types_tv)
 from boxbranding import getMachineBrand, getMachineName
 from Components.ActionMap import ActionMap
 from Components.ConfigList import ConfigListScreen
@@ -1450,7 +1450,7 @@ class IceTVServerSetup(Screen):
 
     _instructions = _(
         "Please select the IceTV service that you wish to use.\n\n"
-	"IceTV is a subscription service that is only available in the listed countries."
+        "IceTV is a subscription service that is only available in the listed countries."
     )
 
     def __init__(self, session):
