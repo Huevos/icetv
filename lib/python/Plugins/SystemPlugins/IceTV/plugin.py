@@ -395,7 +395,7 @@ def _logResponseException(logger, heading, exception):
                 err_text = exception_text
         else:
             try:
-                err_text = ', '.join(_("%s (%d)") % (six.ensure_text(e["error_msg"], "utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
+                err_text = ', '.join(_("%s (%d)") % (six.ensure_str(e["error_msg"], "utf-8"), e["error_code"]) for e in exception.response.json()["errors"])
                 if exception_text:
                     details_text = _("\nSee IceTV log for more details")
             except Exception:
