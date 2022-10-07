@@ -37,7 +37,7 @@ from socket import socket, create_connection, AF_INET, SOCK_DGRAM, SHUT_RDWR, er
 from . import config, saveConfigFile, getIceTVDeviceType
 from boxbranding import getMachineBrand, getMachineName, getImageBuild
 
-_version_string = "20221005"
+_version_string = "20221006"
 _protocol = "http://"
 _device_type_id = getIceTVDeviceType()
 _debug_level = 0  # 1 = request/reply, 2 = 1+headers, 3 = 2+partial body, 4 = 2+full body
@@ -46,8 +46,8 @@ print("[IceTV] server set to", config.plugins.icetv.server.name.value)
 
 iceTVServers = {
     _("Australia"): "api.icetv.com.au",
-# IceTV is no longer available in Germany
-#    _("Germany"): "api.icetv.de",
+    # IceTV is no longer available in Germany
+    # _("Germany"): "api.icetv.de",
 }
 
 def isServerReachable():
