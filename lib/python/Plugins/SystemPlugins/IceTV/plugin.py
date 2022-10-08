@@ -888,7 +888,10 @@ class EPGFetcher(object):
                         continue
                     eit_remap = genre_remaps.get(country_code, {}).get(name, eit)
                     mapped_name = getGenreStringSub((eit_remap >> 4) & 0xf, eit_remap & 0xf, country=country_code)
-                    if mapped_name == name:
+                    # Translate the IceTV genre name because it is being
+                    # compared to a translated genre name returned by
+                    # getGenreStringSub()
+                    if mapped_name == _(name):
                         genres.append(eit_remap)
                         category_cache[name] = eit_remap
                     elif name not in mapping_errors:
