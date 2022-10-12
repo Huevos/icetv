@@ -52,15 +52,17 @@ from Tools.Directories import resolveFilename, SCOPE_PLUGINS
 from Tools.LoadPixmap import LoadPixmap
 from calendar import timegm
 from time import strptime, gmtime, localtime, strftime, time
-from . import config, enableIceTV, disableIceTV
+from . import config, enableIceTV, disableIceTV, _
 from . import API as ice
 from collections import deque, defaultdict
 from operator import itemgetter
 from Screens.TextBox import TextBox
 from Components.TimerSanityCheck import TimerSanityCheck
 import NavigationInstance
+import gettext
 from twisted.internet import reactor, threads
 from os import path
+
 
 _session = None
 password_requested = False
@@ -891,7 +893,10 @@ class EPGFetcher(object):
                     # Translate the IceTV genre name because it is being
                     # compared to a translated genre name returned by
                     # getGenreStringSub()
-                    if mapped_name == _(name):
+                    # It must be translated using the main translation set,
+                    # not the IceTV ones, becaiuse that's where the genre
+                    # name translations are.
+                    if mapped_name == gettext.gettext(name):
                         genres.append(eit_remap)
                         category_cache[name] = eit_remap
                     elif name not in mapping_errors:
@@ -1440,9 +1445,9 @@ class IceTVLogView(TextBox):
 
 class IceTVServerSetup(Screen):
     skin = """
-<screen name="IceTVServerSetup" position="320,130" size="640,510" title="IceTV - Service selection" >
-    <widget name="instructions" position="20,10" size="600,100" font="Regular;22" />
-    <widget name="config" position="30,120" size="580,300" enableWrapAround="1" scrollbarMode="showAlways"/>
+<screen name="IceTVServerSetup" position="320,130" size="640,535" title="IceTV - Service selection" >
+    <widget name="instructions" position="20,10" size="600,125" font="Regular;22" />
+    <widget name="config" position="30,145" size="580,300" enableWrapAround="1" scrollbarMode="showAlways"/>
     <ePixmap name="red" position="20,e-28" size="15,16" pixmap="skin_default/buttons/button_red.png" alphatest="blend" />
     <ePixmap name="green" position="170,e-28" size="15,16" pixmap="skin_default/buttons/button_green.png" alphatest="blend" />
     <widget name="key_red" position="40,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />

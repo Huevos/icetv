@@ -1,0 +1,11 @@
+Package: enigma2-plugin-systemplugins-icetv
+Version: 20221010
+Description: Support for IceTV EPG & Series Recording
+Section: extra
+Priority: optional
+Maintainer: prl <prl@ozemail.com.au>
+License: GPL
+Architecture: all
+OE: enigma2-plugin-systemplugins-icetv
+Depends: enigma2
+Recommends: enigma2-plugin-extensions-series2folder

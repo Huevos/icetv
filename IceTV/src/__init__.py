@@ -35,6 +35,29 @@ from Components.config import config, ConfigSubsection, ConfigNumber, ConfigText
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_PLUGINS
 from Tools.LoadPixmap import LoadPixmap
 import os.path
+from Components.Language import language
+from Tools.Directories import resolveFilename, SCOPE_PLUGINS
+import gettext
+
+PluginLanguageDomain = "IceTV"
+PluginLanguagePath = "SystemPlugins/IceTV/locale"
+
+
+def localeInit():
+    gettext.bindtextdomain(PluginLanguageDomain, resolveFilename(SCOPE_PLUGINS, PluginLanguagePath))
+
+
+def _(txt):
+    trans = gettext.dgettext(PluginLanguageDomain, txt)
+    if trans:
+        return trans
+    else:
+        print("[%s] fallback to default translation for %s" % (PluginLanguageDomain, txt))
+        return gettext.gettext(txt)
+
+
+localeInit()
+language.addCallback(localeInit)
 
 def getIceTVDeviceType():
     return {

@@ -34,10 +34,10 @@ import json
 from fcntl import ioctl
 from struct import pack
 from socket import socket, create_connection, AF_INET, SOCK_DGRAM, SHUT_RDWR, error as sockerror
-from . import config, saveConfigFile, getIceTVDeviceType
+from . import config, saveConfigFile, getIceTVDeviceType, _
 from boxbranding import getMachineBrand, getMachineName, getImageBuild
 
-_version_string = "20221009"
+_version_string = "20221010"
 _protocol = "http://"
 _device_type_id = getIceTVDeviceType()
 _debug_level = 0  # 1 = request/reply, 2 = 1+headers, 3 = 2+partial body, 4 = 2+full body
