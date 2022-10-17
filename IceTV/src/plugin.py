@@ -28,7 +28,7 @@ along with IceTV Plugin.  If not, see <https://www.gnu.org/licenses/>.
 from __future__ import print_function, division
 import six
 
-from enigma import eTimer, eEPGCache, eDVBDB, eServiceReference, iRecordableService, eServiceCenter
+from enigma import eTimer, eEPGCache, eDVBDB, eServiceReference, iRecordableService, eServiceCenter, ePoint
 try:
     from Tools.ServiceReference import service_types_tv_ref
 except ImportError:
@@ -1555,6 +1555,7 @@ class IceTVNewUserSetup(ConfigListScreen, Screen):
     <widget name="key_green" position="190,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
     <widget name="key_yellow" position="340,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
     <widget name="key_blue" position="490,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
+    <widget name="HelpWindow" conditional="HelpWindow" position="0,100000" size="1,1" transparent="1" alphatest="on"/>
 </screen>"""
 
     _instructions = _("Please enter your email address. This is required for us to send you "
@@ -1872,6 +1873,7 @@ class IceTVNeedPassword(ConfigListScreen, Screen):
     <widget name="key_green" position="190,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
     <widget name="key_yellow" position="340,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
     <widget name="key_blue" position="490,e-30" size="150,25" valign="top" halign="left" font="Regular;20" />
+    <widget name="HelpWindow" conditional="HelpWindow" position="0,100000" size="1,1" transparent="1" alphatest="on"/>
 </screen>"""
 
     _instructions = _("The IceTV server has requested password for %s.")

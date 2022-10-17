@@ -1,5 +1,5 @@
 Package: enigma2-plugin-systemplugins-icetv
-Version: 20221010
+Version: 20221016
 Description: Support for IceTV EPG & Series Recording
 Section: extra
 Priority: optional
