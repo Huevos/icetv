@@ -14,8 +14,7 @@ SRCREV = "${AUTOREV}"
 PV = "20221016+git${SRCPV}"
 PKGV = "20221016+git${GITPKGV}"
 
-SRC_URI = "git://bitbucket.org/prl/icetv.git;protocol=https;branch=master \
-	file://ax-python-devel-dont-check-for-distutils.patch"
+SRC_URI = "git://github.com/Huevos/icetv.git;protocol=https;branch=master"
 
 PACKAGES += "${PN}-meta"
 
