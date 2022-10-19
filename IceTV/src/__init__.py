@@ -35,6 +35,29 @@ from Components.config import config, ConfigSubsection, ConfigNumber, ConfigText
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_PLUGINS
 from Tools.LoadPixmap import LoadPixmap
 import os.path
+from Components.Language import language
+from Tools.Directories import resolveFilename, SCOPE_PLUGINS
+import gettext
+
+PluginLanguageDomain = "IceTV"
+PluginLanguagePath = "SystemPlugins/IceTV/locale"
+
+
+def localeInit():
+    gettext.bindtextdomain(PluginLanguageDomain, resolveFilename(SCOPE_PLUGINS, PluginLanguagePath))
+
+
+def _(txt):
+    trans = gettext.dgettext(PluginLanguageDomain, txt)
+    if trans:
+        return trans
+    else:
+        print("[%s] fallback to default translation for %s" % (PluginLanguageDomain, txt))
+        return gettext.gettext(txt)
+
+
+localeInit()
+language.addCallback(localeInit)
 
 def getIceTVDeviceType():
     return {
@@ -52,16 +75,16 @@ config.plugins.icetv.server = ConfigSubsection()
 config.plugins.icetv.server.name = ConfigText(default="api.icetv.com.au")
 
 config.plugins.icetv.member = ConfigSubsection()
-config.plugins.icetv.member.email_address = ConfigText(show_help=False, fixed_size=False)
+config.plugins.icetv.member.email_address = ConfigText(fixed_size=False)
 config.plugins.icetv.member.token = ConfigText()
 config.plugins.icetv.member.id = ConfigNumber()
 config.plugins.icetv.member.region_id = ConfigNumber()
 config.plugins.icetv.member.country = ConfigText(default="AUS")
 
-config.plugins.icetv.member.password = NoSave(ConfigPassword(censor="●", show_help=False, fixed_size=False))
+config.plugins.icetv.member.password = NoSave(ConfigPassword(censor="●", fixed_size=False))
 
 config.plugins.icetv.device = ConfigSubsection()
-config.plugins.icetv.device.label = ConfigText(default="%s %s" % (getMachineBrand(), getMachineName()), show_help=False)
+config.plugins.icetv.device.label = ConfigText(default="%s %s" % (getMachineBrand(), getMachineName()))
 config.plugins.icetv.device.id = ConfigNumber()
 config.plugins.icetv.device.type_id = ConfigNumber(default=getIceTVDeviceType())
 

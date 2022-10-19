@@ -1,0 +1,17 @@
+<default>
+	<prerequisites>
+	<tag type="Recording" />
+	</prerequisites>
+	<info>
+		<author>Peter Urbanec</author>
+		<name>IceTV</name>
+		<packagename>enigma2-plugin-extensions-icetv</packagename>
+		<shortdescription>IceTV EPG & recording management service</shortdescription>
+		<description>IceTV provides an online subscription service for EPG and recording management in Australia.</description>
+		<!--<screenshot src="http://www.dreamboxupdate.com/preview/plugin_icetv_en.jpg" />-->
+	</info>
+
+	<files type="package"> <!-- without version, without .ipk -->
+		<file type="package" name="enigma2-plugin-extensions-icetv" />
+	</files>
+</default>

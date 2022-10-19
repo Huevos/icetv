@@ -1,0 +1,377 @@
+# Move series recordings into folders.
+# Copyright (C) 2022 THE IceTV package's COPYRIGHT HOLDER
+# This file is distributed under the same license as the IceTV package.
+# Automatically generated, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: IceTV v20221007\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-10-15 13:25+1100\n"
+"PO-Revision-Date: 2022-10-09 16:41+1100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid ""
+"\n"
+"See IceTV log for more details"
+msgstr ""
+"\n"
+"See IceTV log for more details"
+
+#, python-format
+msgid "%s (%d)"
+msgstr "%s (%d)"
+
+msgid "1 hour"
+msgstr "1 hour"
+
+msgid "10 minutes"
+msgstr "10 minutes"
+
+msgid "12 hours"
+msgstr "12 hours"
+
+msgid "15 minutes"
+msgstr "15 minutes"
+
+msgid "2 hours"
+msgstr "2 hours"
+
+msgid "2 minutes"
+msgstr "2 minutes"
+
+msgid "24 hours"
+msgstr "24 hours"
+
+msgid "3 hours"
+msgstr "3 hours"
+
+msgid "30 minutes"
+msgstr "30 minutes"
+
+msgid "4 hours"
+msgstr "4 hours"
+
+msgid "5 hours"
+msgstr "5 hours"
+
+msgid "5 minutes"
+msgstr "5 minutes"
+
+msgid "6 hours"
+msgstr "6 hours"
+
+msgid "7 hours"
+msgstr "7 hours"
+
+msgid "8 hours"
+msgstr "8 hours"
+
+msgid ": Unknown error"
+msgstr ": Unknown error"
+
+msgid "Allow IceTV logging to be sent to IceTV if the IceTV server requests it."
+msgstr "Allow IceTV logging to be sent to IceTV if the IceTV server requests it."
+
+msgid "Allow IceTV logs to be sent to IceTV"
+msgstr "Allow IceTV logs to be sent to IceTV"
+
+msgid "Australia"
+msgstr "Australia"
+
+msgid "Can not delete timer"
+msgstr "Can not delete timer"
+
+msgid "Can not download EPG"
+msgstr "Can not download EPG"
+
+msgid "Can not download current region details"
+msgstr "Can not download current region details"
+
+msgid "Can not download list of regions"
+msgstr "Can not download list of regions"
+
+msgid "Can not download timers"
+msgstr "Can not download timers"
+
+msgid "Can not post PVR log information"
+msgstr "Can not post PVR log information"
+
+msgid "Can not post scan information"
+msgstr "Can not post scan information"
+
+msgid "Can not retrieve IceTV settings"
+msgstr "Can not retrieve IceTV settings"
+
+msgid "Can not retrieve channel map"
+msgstr "Can not retrieve channel map"
+
+msgid "Can not update timer"
+msgstr "Can not update timer"
+
+msgid "Can not update timer status"
+msgstr "Can not update timer status"
+
+msgid "Can not update timers"
+msgstr "Can not update timers"
+
+msgid "Can not upload timer"
+msgstr "Can not upload timer"
+
+msgid "Can't allocate program source (e.g. tuner)"
+msgstr "Can't allocate program source (e.g. tuner)"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Choose a label that will identify this device within IceTV services."
+msgstr "Choose a label that will identify this device within IceTV services."
+
+msgid "Choose how often to connect to IceTV server to check for updates."
+msgstr "Choose how often to connect to IceTV server to check for updates."
+
+#, python-format
+msgid "Congratulations, you have successfully configured your %s %s for use with the IceTV Smart Recording service. Your IceTV guide will now download in the background."
+msgstr "Congratulations, you have successfully configured your %s %s for use with the IceTV Smart Recording service. Your IceTV guide will now download in the background."
+
+msgid "Connect to IceTV server every"
+msgstr "Connect to IceTV server every"
+
+#, python-format
+msgid "Contacting IceTV server and setting up your %s %s."
+msgstr "Contacting IceTV server and setting up your %s %s."
+
+msgid "Disable IceTV"
+msgstr "Disable IceTV"
+
+msgid "Disk full"
+msgstr "Disk full"
+
+msgid "Done"
+msgstr "Done"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Enable IceTV"
+msgstr "Enable IceTV"
+
+msgid ""
+"Enjoy how IceTV can enhance your TV viewing experience by downloading the IceTV app to your smartphone or tablet. The IceTV app is available free from the iTunes App Store, the Google Play Store and the Windows Phone Store.\n"
+"\n"
+"Download it today!"
+msgstr ""
+"Enjoy how IceTV can enhance your TV viewing experience by downloading the IceTV app to your smartphone or tablet. The IceTV app is available free from the iTunes App Store, the Google Play Store and the Windows Phone Store.\n"
+"\n"
+"Download it today!"
+
+msgid "Error opening recording file"
+msgstr "Error opening recording file"
+
+msgid "Existing or trial user"
+msgstr "Existing or trial user"
+
+msgid "Fetch EPG and update timers now"
+msgstr "Fetch EPG and update timers now"
+
+msgid "IceTV"
+msgstr "IceTV"
+
+msgid "IceTV - Account selection"
+msgstr "IceTV - Account selection"
+
+msgid "IceTV - Login"
+msgstr "IceTV - Login"
+
+msgid "IceTV - Password required"
+msgstr "IceTV - Password required"
+
+msgid "IceTV - Region"
+msgstr "IceTV - Region"
+
+msgid "IceTV - Service selection"
+msgstr "IceTV - Service selection"
+
+msgid "IceTV - Setup"
+msgstr "IceTV - Setup"
+
+msgid "IceTV - User Information"
+msgstr "IceTV - User Information"
+
+msgid "IceTV disabled"
+msgstr "IceTV disabled"
+
+msgid "IceTV enabled"
+msgstr "IceTV enabled"
+
+msgid "IceTV setup wizard"
+msgstr "IceTV setup wizard"
+
+msgid "IceTV update completed OK"
+msgstr "IceTV update completed OK"
+
+msgid ""
+"IceTV update completed with errors.\n"
+"\n"
+"Please check the log for details."
+msgstr ""
+"IceTV update completed with errors.\n"
+"\n"
+"Please check the log for details."
+
+#, python-format
+msgid "IceTV version %s"
+msgstr "IceTV version %s"
+
+msgid ""
+"In order to allow you to access all the features of the IceTV smart recording service, we need to gather some basic information.\n"
+"\n"
+"If you already have an IceTV subscription or trial, please select 'Existing or trial user', if not, then select 'New user'."
+msgstr ""
+"In order to allow you to access all the features of the IceTV smart recording service, we need to gather some basic information.\n"
+"\n"
+"If you already have an IceTV subscription or trial, please select 'Existing or trial user', if not, then select 'New user'."
+
+msgid "Keyboard"
+msgstr "Keyboard"
+
+msgid "Label"
+msgstr "Label"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Login failure"
+msgstr "Login failure"
+
+msgid "Login to IceTV server"
+msgstr "Login to IceTV server"
+
+msgid "Misconfiguration in channel allocation"
+msgstr "Misconfiguration in channel allocation"
+
+msgid "New event info"
+msgstr "New event info"
+
+msgid "New program info"
+msgstr "New program info"
+
+msgid "New user"
+msgstr "New user"
+
+msgid "No TS recorder available"
+msgstr "No TS recorder available"
+
+msgid "No demux available"
+msgstr "No demux available"
+
+msgid "No error"
+msgstr "No error"
+
+msgid "No valid region details were found"
+msgstr ""
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Please enter your email address. This is required for us to send you service announcements, account reminders, promotional offers and a welcome email."
+msgstr "Please enter your email address. This is required for us to send you service announcements, account reminders, promotional offers and a welcome email."
+
+msgid ""
+"Please select the IceTV service that you wish to use.\n"
+"\n"
+"IceTV is a subscription service that is only available in the listed countries."
+msgstr ""
+"Please select the IceTV service that you wish to use.\n"
+"\n"
+"IceTV is a subscription service that is only available in the listed countries."
+
+msgid "Please select the region that most closely matches your physical location. The region is required to enable us to provide the correct guide information for the channels you can receive."
+msgstr "Please select the region that most closely matches your physical location. The region is required to enable us to provide the correct guide information for the channels you can receive."
+
+msgid "Please wait while the list downloads..."
+msgstr "Please wait while the list downloads..."
+
+msgid "Record write error (no space on disk?)"
+msgstr "Record write error (no space on disk?)"
+
+msgid "Recording aborted"
+msgstr "Recording aborted"
+
+msgid "Recording failed"
+msgstr "Recording failed"
+
+msgid "Recording finished"
+msgstr "Recording finished"
+
+msgid "Recording running"
+msgstr "Recording running"
+
+msgid "Recording started"
+msgstr "Recording started"
+
+msgid "Recording stopped"
+msgstr "Recording stopped"
+
+msgid "Recording tuning failed"
+msgstr "Recording tuning failed"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Show log"
+msgstr "Show log"
+
+msgid "Streaming recording ended"
+msgstr "Streaming recording ended"
+
+#, python-format
+msgid ""
+"The IceTV server can not be reached. Try checking the Internet connection on your %s %s\n"
+"Error"
+msgstr ""
+"The IceTV server can not be reached. Try checking the Internet connection on your %s %s\n"
+"Error"
+
+#, python-format
+msgid "The IceTV server has requested password for %s."
+msgstr "The IceTV server has requested password for %s."
+
+msgid "There was an error downloading current region details"
+msgstr "There was an error downloading current region details"
+
+msgid "There was an error downloading the region list"
+msgstr "There was an error downloading the region list"
+
+msgid "There was an error while trying to login."
+msgstr "There was an error while trying to login."
+
+msgid "Tuned for recording"
+msgstr "Tuned for recording"
+
+msgid "Unknown error code"
+msgstr "Unknown error code"
+
+msgid "Unknown recording event"
+msgstr "Unknown recording event"
+
+msgid "Welcome to IceTV"
+msgstr "Welcome to IceTV"
+
+msgid "Your email address is used to login to IceTV services."
+msgstr "Your email address is used to login to IceTV services."
+
+msgid "Your existing IceTV password."
+msgstr "Your existing IceTV password."
+
+msgid "Your password must have at least 5 characters."
+msgstr "Your password must have at least 5 characters."
+
+#~ msgid "No valid region details were foind"
+#~ msgstr "No valid region details were foind"
